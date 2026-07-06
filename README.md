@@ -106,7 +106,7 @@ Key arguments specific to this track:
 | `--noise` | Std. dev. of Gaussian noise injected into target data — controls domain-shift severity (`{0.3, 0.6, 0.9}` in Table 1) |
 | `--degree_scarcity` | Fraction of target training data used — controls label scarcity (`{0.05, 0.25, 0.5}` in Table 1) |
 | `--k` | Gompertz function parameter (this is `µ` in the paper) |
-| `--mu` | Proximal-regularization coefficient in target local training (this is `λ` in the paper's proximal term — unrelated to `--k`/`µ`; default `0` for this track) |
+| `--mu` | Proximal-regularization coefficient in target local training (this is `λ` in the paper's proximal term — unrelated to `--k`/`µ`; default `0.001` for this track) |
 | `--device_server` / `--device_local` | GPU device indices — adjust for your hardware (single-GPU/CPU setups should edit the `.to(device)` calls or set both to the same index) |
 
 Same convention for the other baselines in this folder: `FedAvg.py`, `FedAvgFT.py`, `FedDWA.py`, `FedGP.py`, `TargetOnly.py`.
