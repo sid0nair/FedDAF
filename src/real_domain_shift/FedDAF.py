@@ -39,9 +39,9 @@ parser.add_argument('--seed', type=int, default=50, help='random seed') ##Fixed
 
 parser.add_argument('--learning_rate', type=float, default= 0.01 , help='choose learning rate for optimizer')
 parser.add_argument('--learning_rate_target', type=float, default= 0.001 , help='choose learning rate for optimizer')
-parser.add_argument('--k', type=float, default=5 , help='choose learning rate for optimizer')
+parser.add_argument('--k', type=float, default=5 , help='Gompertz function parameter (mu in the paper)')
 
-parser.add_argument('--mu', type=float, default=0.001, help= 'choose alpha') ##Fixed
+parser.add_argument('--mu', type=float, default=0.001, help='proximal regularization coefficient (lambda in the paper)') ##Fixed
 #parser.add_argument('--num_per_class', type=int, default=500, help= 'choose alpha') ##Fixed
 
 parser.add_argument('--device_server', type=int, default=0, help='gpu number for server')
@@ -651,6 +651,3 @@ if __name__ == '__main__':
         print("{} ".format(epoch+1), "{:.4f}".format(auc), "{:.4f}".format(acc), "{:.4f}".format(ka), "{:.3f}".format(total_time))
         
     print("Best accuracies in all the target clients:", max(target_accuracy))
-
-
-
