@@ -97,8 +97,6 @@ python src/cifar10_controlled_shift/FedDAF.py \
     --seed 50
 ```
 
-> **Note:** this script's built-in default for `--mu` is `0`. The command above passes `--mu 0.001` explicitly to match the proximal coefficient λ = 0.001 reported for Tables 1–3 in the paper — always pass `--mu 0.001` yourself when reproducing those results rather than relying on the flag's default.
-
 Key arguments specific to this track:
 
 | Argument | Description |
@@ -108,7 +106,7 @@ Key arguments specific to this track:
 | `--noise` | Std. dev. of Gaussian noise injected into target data — controls domain-shift severity (`{0.3, 0.6, 0.9}` in Table 1) |
 | `--degree_scarcity` | Fraction of target training data used — controls label scarcity (`{0.05, 0.25, 0.5}` in Table 1) |
 | `--k` | Gompertz function parameter (this is `µ` in the paper; sweep values in Table 3 are `{-10, -5, -1, 0, 1, 5, 10}`) |
-| `--mu` | Proximal-regularization coefficient in target local training (this is `λ` in the paper's proximal term — unrelated to `--k`/`µ`; **script default is `0`, but all reported results use `0.001`, so pass it explicitly**) |
+| `--mu` | Proximal-regularization coefficient in target local training (this is `λ` in the paper's proximal term — unrelated to `--k`/`µ`; default `0.001` for this track, matching all reported results in Tables 1 and 3) |
 | `--device_server` / `--device_local` | GPU device indices — adjust for your hardware (single-GPU/CPU setups should edit the `.to(device)` calls or set both to the same index) |
 
 Same convention for the other baselines in this folder: `FedAvg.py`, `FedAvgFT.py`, `FedDWA.py`, `FedGP.py`, `TargetOnly.py`.
