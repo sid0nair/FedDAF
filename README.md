@@ -2,8 +2,8 @@
 
 Official implementation of **FedDAF**, a Federated Domain Adaptation (FDA) method that aggregates a target client's model with the global source model using a similarity score derived from **model functional distance** — the cosine similarity between mean gradient fields, normalized with a **Gompertz function**.
 
-> Mrinmay Sen*, Sidhant Nair*, C Krishna Mohan. **FedDAF: Federated Domain Adaptation Using Model Functional Distance.** *(under review, Springer Machine Learning)*
-> *Equal contribution.
+> Mrinmay Sen†, Sidhant Nair*†, C Krishna Mohan. **FedDAF: Federated Domain Adaptation Using Model Functional Distance.** *(under review, Springer Machine Learning)*
+> *Corresponding author. †Equal contribution.
 
 ## Overview
 
@@ -15,18 +15,18 @@ FedDAF addresses both issues at once:
 2. The target client computes the **mean gradient field** of the global source model and of its own previous model, evaluated on its (limited) local target data.
 3. The **cosine similarity** between these two mean gradient fields is converted to an angle, then normalized with a **Gompertz function** to produce an aggregation weight `α ∈ [0, 1]`.
 4. The target and global source models are combined as `w = α·w_S + (1 − α)·w_T`, giving an *adapted target model* that sits at a similarity-informed point between the two objectives.
-5. The adapted model is then fine-tuned on the target's local data.
+5. The adapted model is then fine-tuned on the target's local data, regularized with a FedProx-style proximal term anchored to the (un-adapted) global source model.
 
 This lets the target pull in exactly as much source information as its own objective supports, even with very few labeled target samples.
 
 ## Repository structure
 
-The paper reports two experimental settings — **controlled domain shift** (CIFAR-10 with injected noise + label scarcity, Table 1) and **real-world domain shift** (PACS / VLCS / Office-Caltech-10, Table 2) — each with its own set of scripts, since the data pipeline differs (synthetic partitioning + noise vs. `ImageFolder` domains).
+The paper reports two experimental settings — **controlled domain shift** (CIFAR-10 with injected noise + label scarcity, Table 1, and the Gompertz-parameter sweep in Table 3) and **real-world domain shift** (PACS / VLCS / Office-Caltech-10, Table 2) — each with its own set of scripts, since the data pipeline differs (synthetic partitioning + noise vs. `ImageFolder` domains).
 
 ```
 FedDAF/
 ├── src/
-│   ├── cifar10_controlled_shift/   # Table 1: CIFAR-10, Dirichlet source partitioning + Gaussian noise
+│   ├── cifar10_controlled_shift/   # Tables 1 & 3: CIFAR-10, Dirichlet source partitioning + Gaussian noise
 │   │   ├── FedDAF.py       # Proposed method
 │   │   ├── FedAvg.py       # Baseline: vanilla FedAvg
 │   │   ├── FedAvgFT.py     # Baseline: FedAvg + target fine-tuning
@@ -50,7 +50,7 @@ Both tracks implement the same FedDAF method (Algorithms 1–3); only the data l
 ## Installation
 
 ```bash
-git clone https://github.com/<your-username>/FedDAF.git
+git clone https://github.com/sid0nair/FedDAF.git
 cd FedDAF
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -78,7 +78,7 @@ Tested with PyTorch 1.12.1 (CUDA 10.2) on a single Tesla V100, per the paper's e
 
 Each script is self-contained and run independently.
 
-### CIFAR-10 controlled domain shift (Table 1)
+### CIFAR-10 controlled domain shift (Tables 1 & 3)
 
 ```bash
 python src/cifar10_controlled_shift/FedDAF.py \
@@ -97,6 +97,8 @@ python src/cifar10_controlled_shift/FedDAF.py \
     --seed 50
 ```
 
+> **Note:** this script's built-in default for `--mu` is `0`. The command above passes `--mu 0.001` explicitly to match the proximal coefficient λ = 0.001 reported for Tables 1–3 in the paper — always pass `--mu 0.001` yourself when reproducing those results rather than relying on the flag's default.
+
 Key arguments specific to this track:
 
 | Argument | Description |
@@ -105,8 +107,8 @@ Key arguments specific to this track:
 | `--dir_alpha` | Dirichlet concentration parameter for source partitioning (1 in the paper) |
 | `--noise` | Std. dev. of Gaussian noise injected into target data — controls domain-shift severity (`{0.3, 0.6, 0.9}` in Table 1) |
 | `--degree_scarcity` | Fraction of target training data used — controls label scarcity (`{0.05, 0.25, 0.5}` in Table 1) |
-| `--k` | Gompertz function parameter (this is `µ` in the paper) |
-| `--mu` | Proximal-regularization coefficient in target local training (this is `λ` in the paper's proximal term — unrelated to `--k`/`µ`; default `0.001` for this track) |
+| `--k` | Gompertz function parameter (this is `µ` in the paper; sweep values in Table 3 are `{-10, -5, -1, 0, 1, 5, 10}`) |
+| `--mu` | Proximal-regularization coefficient in target local training (this is `λ` in the paper's proximal term — unrelated to `--k`/`µ`; **script default is `0`, but all reported results use `0.001`, so pass it explicitly**) |
 | `--device_server` / `--device_local` | GPU device indices — adjust for your hardware (single-GPU/CPU setups should edit the `.to(device)` calls or set both to the same index) |
 
 Same convention for the other baselines in this folder: `FedAvg.py`, `FedAvgFT.py`, `FedDWA.py`, `FedGP.py`, `TargetOnly.py`.
@@ -126,7 +128,7 @@ python src/real_domain_shift/FedDAF.py \
     --seed 50
 ```
 
-Supported `--dataset` values: `PACS`, `VLCS`, `offcie_caltech10` (Office-Caltech-10), `OfficeHome`.
+Supported `--dataset` values: `PACS`, `VLCS`, `office_caltech10` (Office-Caltech-10), `OfficeHome`.
 
 | Argument | Description |
 |---|---|
@@ -136,7 +138,7 @@ Supported `--dataset` values: `PACS`, `VLCS`, `offcie_caltech10` (Office-Caltech
 | `--learning_rate` / `--learning_rate_target` | Source / target SGD learning rate |
 | `--global_epoch` | Number of federated communication rounds |
 | `--k` | Gompertz function parameter (`µ` in the paper) |
-| `--mu` | Proximal-regularization coefficient (`λ` in the paper's proximal term; default `0.001` for this track) |
+| `--mu` | Proximal-regularization coefficient (`λ` in the paper's proximal term; default `0.001` for this track, matching the paper) |
 | `--seed` | Random seed (50 in all reported results) |
 
 The target domain, class count, and train/test split percentage for each dataset are set at the top of the `if __name__ == '__main__':` block in each script — edit these directly to change which domain is held out as the target. Same CLI convention applies to `FedAvg.py`, `FedAvgFT.py`, `FedDWA.py`, `FedGP.py`, `TargetOnly.py` in this folder.
@@ -148,11 +150,11 @@ Paths below are relative to `src/`; the same functions/structure appear in both 
 | Paper element | Code |
 |---|---|
 | Algorithm 2 (mean gradient field) | `FindPersonalizedModel` (gradient accumulation loops) in `FedDAF.py` |
-| Algorithm 3 (Gompertz-normalized target aggregation, Eq. 2) | `FindPersonalizedModel` in `FedDAF.py` |
-| Eq. 1 (final adapted model `w = αw_S + (1−α)w_T`) | same function, `mod = sim*flat_grad(...) + (1-sim)*flat_grad(...)` |
-| Target local training (Section 4.2) | `local_update_target` in `FedDAF.py` — includes a FedProx-style proximal term (`args.mu`) not currently described in the paper; regularization anchor is the un-adapted global source model, not the adapted model used for initialization. Manuscript update in progress. |
+| Algorithm 3 (Gompertz-normalized target aggregation, Eq. 2) | `FindPersonalizedModel` in `FedDAF.py`: cosine similarity is computed, converted to an angle via `acos`, then the same variable is overwritten with the Gompertz-normalized weight `α` before the final convex combination |
+| Eq. 2 (adapted target model `w_n = αw_S + (1−α)w_T`) | same function; the convex combination is applied per-parameter over the flattened model tensors |
+| Target local training (Section 4.2) | `local_update_target` in `FedDAF.py` — FedProx-style proximal term (`args.mu`, i.e. λ), anchored to the un-adapted global source model broadcast at the start of the round, not the adapted model used for initialization (matches Sec 4.2 exactly) |
 | Source local training (Section 4.3) | `local_update_source` in `FedDAF.py` |
-| Source model aggregation (Eq. 3) | `aggregate_with_softmax` in `FedDAF.py` — aggregates source models by softmax weighting over their distance to the target model, rather than the plain average currently in Eq. 3 of the paper. Manuscript update in progress. |
+| Source model aggregation (Eq. 3) | `aggregate_with_softmax` in `FedDAF.py` — softmax weighting over each source model's distance to the current target model, matching Eq. 3 |
 
 ## Citation
 
