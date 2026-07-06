@@ -93,7 +93,7 @@ python src/cifar10_controlled_shift/FedDAF.py \
     --learning_rate 0.01 \
     --learning_rate_target 0.001 \
     --k 5 \
-    --mu 0 \
+    --mu 0.001 \
     --seed 50
 ```
 
