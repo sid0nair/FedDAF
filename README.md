@@ -136,7 +136,7 @@ Supported `--dataset` values: `PACS`, `VLCS`, `offcie_caltech10` (Office-Caltech
 | `--learning_rate` / `--learning_rate_target` | Source / target SGD learning rate |
 | `--global_epoch` | Number of federated communication rounds |
 | `--k` | Gompertz function parameter (`µ` in the paper) |
-| `--mu` | Proximal-regularization coefficient (`λ` in the paper's proximal term; default `0.001` for this track — **note this differs from the CIFAR-10 track's default of `0`**) |
+| `--mu` | Proximal-regularization coefficient (`λ` in the paper's proximal term; default `0.001` for this track) |
 | `--seed` | Random seed (50 in all reported results) |
 
 The target domain, class count, and train/test split percentage for each dataset are set at the top of the `if __name__ == '__main__':` block in each script — edit these directly to change which domain is held out as the target. Same CLI convention applies to `FedAvg.py`, `FedAvgFT.py`, `FedDWA.py`, `FedGP.py`, `TargetOnly.py` in this folder.
